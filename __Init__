@@ -1,0 +1,52 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define XOR and XNOR gates
+XOR_gate = np.array([
+    [1, 1, 1],
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+
+XNOR_gate = np.array([
+    [1, 1, 0],
+    [1, 0, 1],
+    [0, 1, 1],
+    [0, 0, 0]])
+
+# Get user inputs
+gate_type = int(input("Choose the gate type (0 for XNOR, 1 for XOR): "))
+num_vertical_stacks = int(input("Number of vertical stacks: "))
+num_horizontal_stacks = int(input("Number of horizontal stacks: "))
+num_vertical_iterations = int(input("Number of iterations of vertical stacks: "))
+num_horizontal_iterations = int(input("Number of iterations of horizontal stacks: "))
+
+# Choose the initial matrix based on the gate type
+initial_matrix = XOR_gate if gate_type else XNOR_gate
+
+# Function to reflect and stack a matrix vertically n times
+def stack_matrix_vertically(matrix, n):
+    stacked_matrix = matrix
+    for _ in range(n):
+        stacked_matrix = np.vstack((stacked_matrix, np.flipud(matrix)))
+        matrix = np.flipud(stacked_matrix)
+    return stacked_matrix
+
+# Function to reflect and stack a matrix horizontally n times
+def stack_matrix_horizontally(matrix, n):
+    stacked_matrix = matrix
+    for _ in range(n):
+        stacked_matrix = np.hstack((stacked_matrix, np.fliplr(matrix)))
+        matrix = np.fliplr(stacked_matrix)
+    return stacked_matrix
+
+# Stack and reflect the matrix according to user inputs
+matrix = stack_matrix_vertically(initial_matrix, num_vertical_stacks)
+matrix = stack_matrix_vertically(matrix, num_vertical_iterations)
+matrix = stack_matrix_horizontally(matrix, num_horizontal_stacks)
+matrix = stack_matrix_horizontally(matrix, num_horizontal_iterations)
+
+# Plot the final matrix
+plt.imshow(matrix, cmap='binary')
+plt.axis('off')
+plt.show()
