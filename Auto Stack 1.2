@@ -1,0 +1,99 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+# Define the necessary functions before they are called
+
+def build_matrix(gate_choice):
+    xor_table = [
+        [1, 1, 0],
+        [1, 0, 1],
+        [0, 1, 1],
+        [0, 0, 0]
+    ]
+
+    xnor_table = [
+        [1, 1, 1],
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+    ]
+
+    if gate_choice == "1":
+        matrix = xor_table
+    elif gate_choice == "0":
+        matrix = xnor_table
+    else:
+        raise ValueError("Invalid gate choice. Please enter either '1 for xor' or '0 for xnor'.")
+
+    return np.array(matrix)
+
+def stack_matrix(input_matrix, num_vertical_stacks, num_horizontal_stacks):
+    matrix = input_matrix.copy()
+    for _ in range(num_vertical_stacks - 1):
+        matrix = np.vstack((matrix, np.flip(matrix, axis=0)))
+
+    for _ in range(num_horizontal_stacks - 1):
+        matrix = np.hstack((matrix, np.flip(matrix, axis=1)))
+
+    return matrix
+
+def update_matrix(matrix):
+    updated_matrix = matrix.copy()
+    height, width = matrix.shape
+
+    for i in range(height):
+        for j in range(width):
+            n_black = 0
+            for x in range(max(i - 1, 0), min(i + 2, height)):
+                for y in range(max(j - 1, 0), min(j + 2, width)):
+                    if (x, y) != (i, j) and matrix[x, y] == 1:
+                        n_black += 1
+
+            if matrix[i, j] == 0 and n_black == 2:
+                updated_matrix[i, j] = 1
+            elif matrix[i, j] == 1 and n_black % 2 == 1:
+                updated_matrix[i, j] = 0
+
+                for x, y in [(i - 1, j - 1), (i - 1, j + 1), (i + 1, j - 1), (i + 1, j + 1)]:
+                    if 0 <= x < height and 0 <= y < width and matrix[x, y] == 1:
+                        updated_matrix[x, y] = 0
+
+    return updated_matrix
+
+def animate(matrix, num_time_steps):
+    fig, ax = plt.subplots()
+
+    def update(num):
+        nonlocal matrix
+        ax.clear()
+        ax.imshow(matrix, cmap='binary')
+        ax.set_title(f'Time Step {num+1}')
+        matrix = update_matrix(matrix)
+
+    anim = FuncAnimation(fig, update, frames=num_time_steps, repeat=False)
+    plt.show()
+
+# Request user inputs
+gate_choice = input("Enter '1' for XOR or '0' for XNOR: ")
+num_vertical_stacks = int(input("Enter the number of vertical stacks: "))
+num_horizontal_stacks = int(input("Enter the number of horizontal stacks: "))
+num_horizontal_iterations = int(input("Enter the number of horizontal iterations: "))
+num_vertical_iterations = int(input("Enter the number of vertical iterations: "))
+num_time_steps = int(input("Enter the number of time steps: "))
+
+# Build the initial matrix
+initial_matrix = build_matrix(gate_choice)
+
+# Perform vertical iterations
+stacked_matrix = initial_matrix
+for _ in range(num_vertical_iterations):
+    stacked_matrix = stack_matrix(stacked_matrix, num_vertical_stacks, num_horizontal_stacks)
+
+# Perform horizontal iterations
+horizontal_matrix = stacked_matrix
+for _ in range(num_horizontal_iterations):
+    horizontal_matrix = np.hstack((horizontal_matrix, np.fliplr(horizontal_matrix)))
+
+# Animate the matrix
+animate(horizontal_matrix, num_time_steps)
